@@ -1,0 +1,18 @@
+---
+description: Read project context files before starting work in new conversations
+alwaysApply: true
+---
+
+# Persistent Project Context
+
+- Before starting work, check `.agent-memory/PROJECT_CONTEXT.md`, `.agent-memory/SCHEMA_SUMMARY.md`, `.agent-memory/BRAND_CONTEXT.md`, `.agent-memory/MANUAL_NOTES.md`, `.agent-memory/ROADMAP.md`, `.agent-memory/WORKING_LOG.md`.
+- Code is the source of truth; `.agent-memory/*.md` are fast-recovery cache contexts.
+- Before UI/UX/branding work, always read `BRAND_CONTEXT.md` first.
+- When user mentions roadmap, TODO, backlog, "remember this" — read `ROADMAP.md` first.
+- Brand principles not in `BRAND_CONTEXT.md` must not be assumed.
+- Before any feature work, read `FEATURE_MAP.md` to identify all affected portals/platforms.
+- **Reference First**: Before implementing on any platform, check if the same feature already exists elsewhere. If so, read that code first and match fields, flows, validations, and API calls.
+- **Completeness Check**: Never build only the happy path. Check auth flows, error/edge cases, real device environments, adjacent features, and server API coverage.
+- **Cross-platform Check**: Before completing any change, verify whether it needs to be reflected on other platforms. Always check regardless of change type.
+- After meaningful changes, add a brief record to `WORKING_LOG.md`.
+- When modifying `.agent-memory/` docs, always tell the user explicitly what changed.
