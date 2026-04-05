@@ -2,7 +2,7 @@
 # Stop hook: Remind agent to update docs before ending a task.
 # Runs when Claude finishes work.
 
-PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 ACTIVE_WORK="$PROJECT_DIR/.agent-memory/ACTIVE_WORK.md"
 
 if grep -q "Status: in-progress" "$ACTIVE_WORK" 2>/dev/null; then

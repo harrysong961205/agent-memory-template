@@ -12,8 +12,9 @@ fi
 
 # Only remind for code files
 if echo "$FILE_PATH" | grep -qE '\.(ts|tsx|js|jsx|py|go|rs|prisma|json|css|swift|kt)$'; then
-  # One reminder per session (per shell PID)
-  MARKER="/tmp/.claude-gate-passed-$$"
+  # One reminder per day per project
+  PROJECT_HASH=$(echo "${CLAUDE_PROJECT_DIR:-$PWD}" | md5sum 2>/dev/null | cut -c1-8 || echo "default")
+  MARKER="/tmp/.claude-gate-passed-$(date +%Y%m%d)-${PROJECT_HASH}"
   if [ ! -f "$MARKER" ]; then
     cat <<'EOF'
 [GATE CHECK] Before editing code, confirm:
