@@ -32,7 +32,8 @@ project-root/
 │   ├── IA_TEMPLATE.md                 ← Copy per platform (IA_WEB.md, IA_MOBILE.md)
 │   ├── ROADMAP.md                     ← User-maintained backlog
 │   ├── MANUAL_NOTES.md                ← Durable project notes
-│   └── WORKING_LOG.md                 ← Rolling change timeline
+│   ├── WORKING_LOG.md                 ← Rolling change timeline
+│   └── CODEX_HANDOFF.md               ← Shared rulebook prepended to every Codex /codex:rescue
 ├── .cursor/rules/
 │   └── persistent-project-context.mdc ← Cursor rule (also works for Cursor users)
 └── .gitignore                         ← Tracks shared config, ignores personal data
@@ -100,6 +101,35 @@ git init
 - Multiple terminals can see each other's in-progress tasks
 - Completed work moves to `WORKING_LOG.md`
 
+### Codex Delegation Workflow (optional)
+
+If your project uses the [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc) plugin, the harness already has the **Plan = Claude, Implement = Codex** workflow wired up:
+
+1. Claude clears Gates 1–5 and settles affected platforms / reference implementations / completeness.
+2. Claude prepends `.agent-memory/CODEX_HANDOFF.md` to a task spec and calls `/codex:rescue --background`.
+3. Claude polls with `/codex:status`, collects `/codex:result`, and verifies platform coverage, i18n keys, and reference parity.
+4. Gaps trigger a focused re-rescue (max 2 retries); remaining gaps are reported to the user.
+5. The user approves before any migration / deploy / `git push`.
+
+If you do not use Codex, delete `.agent-memory/CODEX_HANDOFF.md` and the "Codex Delegation Workflow" section in `CLAUDE.md`.
+
+### Modern UI Design Skills (proactive)
+
+`CLAUDE.md` lists which Claude Code Skills to call before hand-rolling UI:
+
+| Surface | Skill |
+|---------|-------|
+| General UI/UX design + review | `ui-ux-pro-max` |
+| iOS (SwiftUI) | `mobile-ios-design` |
+| Android (Compose) | `mobile-android-design` |
+| Mobile in general | `sleek-design-mobile-apps` |
+| Airbnb-style web | `airbnb-ui-skills` |
+| Web Interface Guidelines audit | `web-design-guidelines` |
+| React/Next.js performance | `vercel-react-best-practices` |
+| Visual / poster work | `canvas-design` |
+
+Patterns adopted from a skill go into `BRAND_CONTEXT.md` so the next session reuses them instead of re-deciding.
+
 ### 7 Specialized Agents
 
 | Agent | Role |
@@ -123,6 +153,8 @@ git init
 | Agent quietly changes docs | Hook: `notify-memory-change.sh` |
 | Task "done" but doesn't actually work | Agent: `task-completion-validator` |
 | Over-engineered simple feature | Agent: `code-quality-pragmatist` |
+| UI styling done from scratch every time | Modern UI Design Skills section in `CLAUDE.md` |
+| Claude busy while Codex sits idle | Codex Delegation Workflow + `CODEX_HANDOFF.md` |
 
 ## Customization
 
