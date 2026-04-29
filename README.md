@@ -23,6 +23,9 @@ project-root/
 │       ├── code-quality-pragmatist.md
 │       ├── claude-md-compliance-checker.md
 │       └── ui-comprehensive-tester.md
+├── .agents/
+│   └── scripts/
+│       └── domain.mjs                 ← Domain concept graph helper (impact / verify / audit)
 ├── .agent-memory/
 │   ├── ACTIVE_WORK.md                 ← In-progress task tracker (multi-terminal safe)
 │   ├── PROJECT_CONTEXT.md             ← Tech stack & workspace summary
@@ -33,7 +36,10 @@ project-root/
 │   ├── ROADMAP.md                     ← User-maintained backlog
 │   ├── MANUAL_NOTES.md                ← Durable project notes
 │   ├── WORKING_LOG.md                 ← Rolling change timeline
-│   └── CODEX_HANDOFF.md               ← Shared rulebook prepended to every Codex /codex:rescue
+│   ├── CODEX_HANDOFF.md               ← Shared rulebook prepended to every Codex /codex:rescue
+│   └── concepts/                      ← Domain concept graph (per-concept edge files)
+│       ├── README.md                  ← Format, vocabulary, address conventions
+│       └── AGENT_TEMPLATE.md          ← Sub-agent prompt for authoring new concepts
 ├── .cursor/rules/
 │   └── persistent-project-context.mdc ← Cursor rule (also works for Cursor users)
 └── .gitignore                         ← Tracks shared config, ignores personal data
@@ -76,7 +82,7 @@ git init
 
 ## How It Works
 
-### 5-Gate System (before any code change)
+### 6-Gate System (before any code change)
 
 | Gate | What it does |
 |------|-------------|
@@ -85,6 +91,7 @@ git init
 | **Gate 3: Reference First** | If the feature exists elsewhere, match that implementation |
 | **Gate 4: Completeness Check** | No happy-path-only; verify auth flows, errors, edge cases |
 | **Gate 5: i18n Check** | No hardcoded user-facing strings (if i18n is active) |
+| **Gate 6: Domain Concept Impact (DOMAIN_MAP)** | Schema/behavior changes on a core concept must run an impact query, review ⚠️ flagged surfaces, and pass `domain.mjs verify` |
 
 ### 3 Hooks (automated guardrails)
 
@@ -100,6 +107,41 @@ git init
 - Register work when starting → recover if session crashes
 - Multiple terminals can see each other's in-progress tasks
 - Completed work moves to `WORKING_LOG.md`
+
+### Domain Concept Graph (DOMAIN_MAP)
+
+Real domains are not trees — they are **webs**. Adding a single column to `Booking` may need updates in multiple endpoints, several UI surfaces, three locale files, two PDF templates, push payloads, and email templates. A folder structure can't capture all that; a triple-store can.
+
+`.agent-memory/concepts/` is a per-concept edge graph where every line is a triple:
+
+```
+<source> → <relation> → <target> [@ note]
+```
+
+For example, edges in a `Booking.md` file might look like:
+
+```
+Booking.totalPrice → read-by → server/src/routes/admin.routes.ts:2731 @ ⚠️ explicit select — add new fields here
+Booking.totalPrice → displayed-on → client/src/pages/host/HostChat.tsx:summary-card
+Booking.adjustedTotalPrice → effective-via → Booking.totalPrice @ effective(adjusted ?? original)
+POST /admin/bookings/:id/adjust → emits → Message.[BOOKING_ADJUSTED]
+```
+
+The 12-verb vocabulary covers data flow (`written-by`, `read-by`), shadows (`shadowed-by`, `effective-via`), effects (`triggers`, `emits`, `side-effect`), presentation (`displayed-on`, `rendered-in`, `i18n-keys`), and structure (`derives-from`, `composed-of`).
+
+**`.agents/scripts/domain.mjs`** parses these graphs and answers:
+
+| Command | Purpose |
+|---------|---------|
+| `domain.mjs list` | All concept files with edge counts |
+| `domain.mjs impact <node>` | Every surface that touches a node (forward + reverse edges) |
+| `domain.mjs check-coverage <Concept>` | All `⚠️` flagged surfaces for manual review |
+| `domain.mjs verify <Concept>` | Auto-verify the graph against the codebase (PASS/FAIL/WARN/SKIP/KNOWN_GAP) |
+| `domain.mjs audit` | Verify all concepts at once |
+
+The verifier statically checks file existence, line ranges, schema model/field membership, `select:`/`include:`/`where:` blocks, system-tag presence, and i18n key existence — so bugs from schema-vs-API drift surface as `FAIL` instead of slipping into production. **Gate 6** runs this on every schema/behavior change, and the post-work checklist requires `audit` to be `FAIL 0` before commit.
+
+When delegating new concept files to a sub-agent, prepend `.agent-memory/concepts/AGENT_TEMPLATE.md` — it bakes in the format, the 6 most common mistakes, and the `verify FAIL 0` exit condition.
 
 ### Codex Delegation Workflow (optional)
 
@@ -155,6 +197,8 @@ Patterns adopted from a skill go into `BRAND_CONTEXT.md` so the next session reu
 | Over-engineered simple feature | Agent: `code-quality-pragmatist` |
 | UI styling done from scratch every time | Modern UI Design Skills section in `CLAUDE.md` |
 | Claude busy while Codex sits idle | Codex Delegation Workflow + `CODEX_HANDOFF.md` |
+| Schema column added but missing from API select | Gate 6 + DOMAIN_MAP `⚠️ explicit select` flags + `domain.mjs verify` |
+| Cross-cutting impact (push / email / PDF / i18n) silently misses a surface | DOMAIN_MAP `impact` query + `audit` |
 
 ## Customization
 
