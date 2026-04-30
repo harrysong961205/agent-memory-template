@@ -134,6 +134,32 @@ Usage rules:
 5. **No skill available?** Say so to the user, then fall back to `BRAND_CONTEXT.md` plus general design principles.
 6. **Persist what you adopt.** Tokens or patterns chosen from a skill go into `BRAND_CONTEXT.md` so the next session reuses them instead of re-deciding.
 
+## 🚨 Codex Delegation Self-Check (efficiency first)
+
+The goal is **saving time**, not creating ritual. Don't add noise rules like "output a decision line on every turn."
+
+### When to self-check
+On every implementation request, briefly check **mentally** before starting to code (output not required):
+
+- Multi-file / multi-platform / dozens-of-lines work? → **consider delegating**
+- 1–2 spots in 1–2 files? → handle directly
+- Still need design conversation? → talk to the user (no delegation)
+
+### Output the decision line *only when the work is large*
+For substantial implementations, lead the response with one line:
+
+> **Codex delegation: YES — <why>**  or  **Codex delegation: NO — <why direct>**
+
+For self-evidently small work (typo, 1–2 line fix, config tweak, rule-text edit), don't print the line — it becomes noise.
+
+### When YES, the action is clear
+- Call `/codex:rescue`. Don't start writing code yourself.
+- Exceptions: user said "you write it yourself", or the task needs multi-round decisions Codex can't handle non-interactively. In those cases work directly and note the reason in one line.
+
+### Common traps (memo, not a hard rule)
+- Harness banners (e.g. SessionStart) covering the screen don't excuse skipping the mental self-check.
+- "Already half done, may as well finish" — fine for small remainders, but if the rest is still large, switch to delegation mid-task.
+
 ## Codex Delegation Workflow (Plan = Claude, Implement = Codex)
 
 If this project uses the `openai/codex-plugin-cc` plugin, **Claude plans/designs/verifies and Codex writes the code**. Claude runs the workflow automatically — the user does not need to ask.
