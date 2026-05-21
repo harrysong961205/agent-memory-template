@@ -1,248 +1,168 @@
-# Claude Code Project Harness
+# Agent Memory Template
 
-A complete, reusable project harness for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — the AI coding assistant by Anthropic.
+A reusable **agent harness** for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — persistent memory, session continuity, pre-work safety gates, automated reminders, and specialized sub-agents.
 
-Clone this into any project to get a battle-tested AI development workflow out of the box: session persistence, cross-platform safety gates, automated reminders, and specialized agents.
+It is built in two layers so the same harness works for **software projects** *and* for **general business operations**:
 
-## What's Included
+- **`core/`** — a domain-agnostic harness: session tracking, the gate framework, hooks, sub-agents.
+- **`profiles/`** — domain packs that plug into core:
+  - **`software/`** — software product work (tech stack, DB schema, IA, i18n, Codex delegation, domain concept graph).
+  - **`business/`** — business operations (org context, stakeholders, decision log, per-function docs — business development / sales / marketing / operations / HR).
+
+You pick a profile at setup time; `setup.sh` composes `core` + the profile into a ready harness.
+
+## Repository Layout
 
 ```
-project-root/
-├── CLAUDE.md                          ← Main agent behavior rules
-├── .claude/
-│   ├── settings.json                  ← Hook configuration
-│   ├── hooks/
-│   │   ├── pre-edit-gate-check.sh     ← Reminds agent to pass gates before editing
-│   │   ├── notify-memory-change.sh    ← Alerts when memory docs are modified
-│   │   └── post-task-reminder.sh      ← Reminds agent to update docs after work
-│   └── agents/
-│       ├── Jenny.md                   ← Spec vs implementation verifier
-│       ├── karen.md                   ← Project reality checker
-│       ├── ultrathink-debugger.md     ← Deep root cause debugger
-│       ├── task-completion-validator.md
-│       ├── code-quality-pragmatist.md
-│       ├── claude-md-compliance-checker.md
-│       └── ui-comprehensive-tester.md
-├── .agents/
-│   └── scripts/
-│       └── domain.mjs                 ← Domain concept graph helper (impact / verify / audit)
-├── .agent-memory/
-│   ├── ACTIVE_WORK.md                 ← In-progress task tracker (multi-terminal safe)
-│   ├── PROJECT_CONTEXT.md             ← Tech stack & workspace summary
-│   ├── BRAND_CONTEXT.md               ← Brand/design guardrails
-│   ├── SCHEMA_SUMMARY.md              ← DB schema summary
-│   ├── FEATURE_MAP.md                 ← Feature → code location mapping
-│   ├── IA_TEMPLATE.md                 ← Copy per platform (IA_WEB.md, IA_MOBILE.md)
-│   ├── ROADMAP.md                     ← User-maintained backlog
-│   ├── MANUAL_NOTES.md                ← Durable project notes
-│   ├── WORKING_LOG.md                 ← Rolling change timeline
-│   ├── CODEX_HANDOFF.md               ← Shared rulebook prepended to every Codex /codex:rescue
-│   └── concepts/                      ← Domain concept graph (per-concept edge files)
-│       ├── README.md                  ← Format, vocabulary, address conventions
-│       └── AGENT_TEMPLATE.md          ← Sub-agent prompt for authoring new concepts
-├── .cursor/rules/
-│   └── persistent-project-context.mdc ← Cursor rule (also works for Cursor users)
-└── .gitignore                         ← Tracks shared config, ignores personal data
+agent-memory-template/
+├── setup.sh                       ← composes core + a profile into a project
+├── core/                          ← domain-agnostic harness
+│   ├── CLAUDE.core.md             ← execution rules, session tracking, gate framework
+│   ├── gitignore.snippet
+│   ├── .claude/
+│   │   ├── settings.json          ← hook configuration
+│   │   ├── hooks/                 ← pre-edit gate / memory-change / post-task reminders
+│   │   └── agents/                ← 7 specialized sub-agents
+│   └── .agent-memory/
+│       ├── ACTIVE_WORK.md         ← in-progress task tracker (multi-terminal safe)
+│       ├── WORKING_LOG.md         ← rolling change timeline
+│       ├── ROADMAP.md             ← now / next / later backlog
+│       └── MANUAL_NOTES.md        ← durable notes
+└── profiles/
+    ├── software/
+    │   ├── CLAUDE.software.md      ← Gates 1-6, Codex workflow, UI skills
+    │   ├── .cursor/rules/
+    │   ├── .agents/scripts/domain.mjs
+    │   └── .agent-memory/          ← PROJECT_CONTEXT, SCHEMA_SUMMARY, FEATURE_MAP,
+    │                                  IA_TEMPLATE, BRAND_CONTEXT, CODEX_HANDOFF, concepts/
+    └── business/
+        ├── CLAUDE.business.md      ← business Gates 1-5, multi-function delegation
+        ├── .cursor/rules/
+        └── .agent-memory/          ← ORG_CONTEXT, STAKEHOLDER_MAP, DECISION_LOG,
+                                       PROCESS_PLAYBOOK, BRAND_CONTEXT, FUNCTION_TEMPLATE
 ```
 
 ## Quick Start
 
-### Option A: Copy into existing project
-
 ```bash
 git clone https://github.com/harrysong961205/agent-memory-template.git /tmp/harness
 
-# Copy everything
-cp /tmp/harness/CLAUDE.md your-project/
-cp -r /tmp/harness/.claude your-project/
-cp -r /tmp/harness/.agent-memory your-project/
-cp -r /tmp/harness/.cursor your-project/
-
-# Merge .gitignore (don't overwrite yours)
-cat /tmp/harness/.gitignore >> your-project/.gitignore
-
-rm -rf /tmp/harness
+# Compose a harness into your project:
+/tmp/harness/setup.sh software /path/to/your-software-project
+# or
+/tmp/harness/setup.sh business /path/to/your-business-workspace
 ```
 
-### Option B: Use as template for new project
+`setup.sh` copies `core/` + the chosen profile into the target and concatenates
+`CLAUDE.core.md` + `CLAUDE.<profile>.md` into a single `CLAUDE.md`.
 
-```bash
-git clone https://github.com/harrysong961205/agent-memory-template.git my-new-project
-cd my-new-project
-rm -rf .git
-git init
-```
+### After setup
 
-### After copying
-
-1. **Edit `CLAUDE.md`** — Customize the platform checklist in Gate 2 for your project
-2. **Fill `.agent-memory/PROJECT_CONTEXT.md`** — Or ask Claude: _"Read the codebase and fill in `.agent-memory/` files"_
-3. **Copy `IA_TEMPLATE.md`** — One per platform (e.g., `IA_WEB.md`, `IA_IOS.md`, `IA_ANDROID.md`)
-4. **Fill `BRAND_CONTEXT.md`** — Colors, tone, design principles (if applicable)
+1. Fill in the `.agent-memory/` context files — or ask Claude: _"Read this project and fill in `.agent-memory/`."_
+2. **software** — customize the Gate 2 platform list in `CLAUDE.md`; copy `IA_TEMPLATE.md` once per platform (`IA_WEB.md`, `IA_IOS.md`, …).
+3. **business** — customize the Gate 2 function list in `CLAUDE.md`; copy `FUNCTION_TEMPLATE.md` once per function (`FUNC_SALES.md`, `FUNC_HR.md`, …).
 
 ## How It Works
 
-### 6-Gate System (before any code change)
+### The gate framework
 
-| Gate | What it does |
-|------|-------------|
-| **Gate 1: Read Docs** | Agent reads relevant memory files before starting |
-| **Gate 2: Cross-platform Checklist** | Lists all affected platforms; must work on ALL of them |
-| **Gate 3: Reference First** | If the feature exists elsewhere, match that implementation |
-| **Gate 4: Completeness Check** | No happy-path-only; verify auth flows, errors, edge cases |
-| **Gate 5: i18n Check** | No hardcoded user-facing strings (if i18n is active) |
-| **Gate 6: Domain Concept Impact (DOMAIN_MAP)** | Schema/behavior changes on a core concept must run an impact query, review ⚠️ flagged surfaces, and pass `domain.mjs verify` |
+Both profiles run a pre-work gate checklist before any work product is produced. The gates
+share one shape — only the domain wording changes:
 
-### 3 Hooks (automated guardrails)
+| # | Software profile | Business profile | Purpose |
+|---|------------------|------------------|---------|
+| 1 | Read Documentation | Read Context | Load relevant memory before starting |
+| 2 | Cross-platform Checklist | Stakeholder & Scope Check | List everything affected; cover all of it |
+| 3 | Reference First | Precedent First | Match prior work/decisions; never reinvent or contradict |
+| 4 | Completeness Check | Completeness Check | No happy-path-only; trace dependencies and edge cases |
+| 5 | i18n Check | Voice & Compliance Check | Localization / brand voice + legal-policy guardrail |
+| 6 | Domain Concept Impact (DOMAIN_MAP) | — | Schema/behavior ripple check (software only) |
 
-| Hook | Trigger | What it does |
-|------|---------|-------------|
-| `pre-edit-gate-check.sh` | Before Edit/Write | Reminds agent to pass gates (once per session) |
-| `notify-memory-change.sh` | After Edit/Write | Alerts if `.agent-memory/` was modified |
-| `post-task-reminder.sh` | On Stop | Reminds to update docs if work is in-progress |
+`core/CLAUDE.core.md` defines the framework; each profile defines its own concrete gates.
 
 ### Session Tracking
 
 `ACTIVE_WORK.md` enables multi-terminal and session-recovery workflows:
-- Register work when starting → recover if session crashes
-- Multiple terminals can see each other's in-progress tasks
-- Completed work moves to `WORKING_LOG.md`
+- Register work when starting → recover if a session crashes.
+- Multiple terminals can see each other's in-progress tasks.
+- Completed work moves to `WORKING_LOG.md`.
 
-### Domain Concept Graph (DOMAIN_MAP)
+### 3 Hooks (automated guardrails — core)
 
-Real domains are not trees — they are **webs**. Adding a single column to `Booking` may need updates in multiple endpoints, several UI surfaces, three locale files, two PDF templates, push payloads, and email templates. A folder structure can't capture all that; a triple-store can.
+| Hook | Trigger | What it does |
+|------|---------|-------------|
+| `pre-edit-gate-check.sh` | Before Edit/Write | Reminds the agent to pass gates before editing code (once per day) |
+| `notify-memory-change.sh` | After Edit/Write | Alerts when `.agent-memory/` is modified |
+| `post-task-reminder.sh` | On Stop | Reminds the agent to update memory docs if work is in progress |
 
-`.agent-memory/concepts/` is a per-concept edge graph where every line is a triple:
-
-```
-<source> → <relation> → <target> [@ note]
-```
-
-For example, edges in a `Booking.md` file might look like:
-
-```
-Booking.totalPrice → read-by → server/src/routes/admin.routes.ts:2731 @ ⚠️ explicit select — add new fields here
-Booking.totalPrice → displayed-on → client/src/pages/host/HostChat.tsx:summary-card
-Booking.adjustedTotalPrice → effective-via → Booking.totalPrice @ effective(adjusted ?? original)
-POST /admin/bookings/:id/adjust → emits → Message.[BOOKING_ADJUSTED]
-```
-
-The 12-verb vocabulary covers data flow (`written-by`, `read-by`), shadows (`shadowed-by`, `effective-via`), effects (`triggers`, `emits`, `side-effect`), presentation (`displayed-on`, `rendered-in`, `i18n-keys`), and structure (`derives-from`, `composed-of`).
-
-**`.agents/scripts/domain.mjs`** parses these graphs and answers:
-
-| Command | Purpose |
-|---------|---------|
-| `domain.mjs list` | All concept files with edge counts |
-| `domain.mjs impact <node>` | Every surface that touches a node (forward + reverse edges) |
-| `domain.mjs check-coverage <Concept>` | All `⚠️` flagged surfaces for manual review |
-| `domain.mjs verify <Concept>` | Auto-verify the graph against the codebase (PASS/FAIL/WARN/SKIP/KNOWN_GAP) |
-| `domain.mjs audit` | Verify all concepts at once |
-
-The verifier statically checks file existence, line ranges, schema model/field membership, `select:`/`include:`/`where:` blocks, system-tag presence, and i18n key existence — so bugs from schema-vs-API drift surface as `FAIL` instead of slipping into production. **Gate 6** runs this on every schema/behavior change, and the post-work checklist requires `audit` to be `FAIL 0` before commit.
-
-When delegating new concept files to a sub-agent, prepend `.agent-memory/concepts/AGENT_TEMPLATE.md` — it bakes in the format, the 6 most common mistakes, and the `verify FAIL 0` exit condition.
-
-### Codex Delegation Workflow (optional)
-
-If your project uses the [`openai/codex-plugin-cc`](https://github.com/openai/codex-plugin-cc) plugin, the harness already has the **Plan = Claude, Implement = Codex** workflow wired up:
-
-1. Claude clears Gates 1–5 and settles affected platforms / reference implementations / completeness.
-2. Claude prepends `.agent-memory/CODEX_HANDOFF.md` to a task spec and calls `/codex:rescue --background`.
-3. Claude polls with `/codex:status`, collects `/codex:result`, and verifies platform coverage, i18n keys, and reference parity.
-4. Gaps trigger a focused re-rescue (max 2 retries); remaining gaps are reported to the user.
-5. The user approves before any migration / deploy / `git push`.
-
-If you do not use Codex, delete `.agent-memory/CODEX_HANDOFF.md` and the "Codex Delegation Workflow" section in `CLAUDE.md`.
-
-### Modern UI Design Skills (proactive)
-
-`CLAUDE.md` lists which Claude Code Skills to call before hand-rolling UI:
-
-| Surface | Skill |
-|---------|-------|
-| General UI/UX design + review | `ui-ux-pro-max` |
-| iOS (SwiftUI) | `mobile-ios-design` |
-| Android (Compose) | `mobile-android-design` |
-| Mobile in general | `sleek-design-mobile-apps` |
-| Airbnb-style web | `airbnb-ui-skills` |
-| Web Interface Guidelines audit | `web-design-guidelines` |
-| React/Next.js performance | `vercel-react-best-practices` |
-| Visual / poster work | `canvas-design` |
-
-Patterns adopted from a skill go into `BRAND_CONTEXT.md` so the next session reuses them instead of re-deciding.
-
-### 7 Specialized Agents
+### 7 Specialized Sub-agents (core)
 
 | Agent | Role |
 |-------|------|
 | **Jenny** | Verify implementation matches specifications |
-| **Karen** | Reality-check project completion status |
+| **Karen** | Reality-check completion status |
 | **ultrathink-debugger** | Deep root cause analysis for hard bugs |
 | **task-completion-validator** | Verify claimed completions actually work |
 | **code-quality-pragmatist** | Catch over-engineering and unnecessary complexity |
-| **claude-md-compliance-checker** | Ensure changes follow CLAUDE.md rules |
+| **claude-md-compliance-checker** | Ensure changes follow `CLAUDE.md` rules |
 | **ui-comprehensive-tester** | Thorough UI testing across web/mobile |
+
+These ship in `core/` as available capabilities; the software profile uses them most.
+
+## The `software` Profile
+
+Adds, on top of core:
+
+- **Gate 6 — DOMAIN_MAP.** Real domains are webs, not trees: a single column on `Booking` can
+  ripple through endpoints, UI surfaces, locale files, PDF/push/email templates.
+  `.agent-memory/concepts/` is a per-concept edge graph, and `.agents/scripts/domain.mjs`
+  answers `impact` / `check-coverage` / `verify` / `audit` queries so schema-vs-API drift
+  surfaces as `FAIL` instead of a production bug.
+- **Codex Delegation Workflow.** If the project uses the `openai/codex-plugin-cc` plugin,
+  Claude plans/verifies and Codex implements; `CODEX_HANDOFF.md` is the shared rulebook.
+- **Modern UI Design Skills.** `CLAUDE.md` maps each UI surface to a Claude Code design skill.
+- Memory: `PROJECT_CONTEXT`, `SCHEMA_SUMMARY`, `FEATURE_MAP`, `IA_TEMPLATE`, `BRAND_CONTEXT`,
+  `CODEX_HANDOFF`, `concepts/`.
+
+## The `business` Profile
+
+Adds, on top of core, the same discipline applied to running a business across functions
+(business development, sales, marketing, operations, HR, finance/legal):
+
+- **Business gates 1-5** — Read Context → Stakeholder & Scope → Precedent First →
+  Completeness → Voice & Compliance.
+- **Multi-function delegation** — one sub-agent per affected function for parallel work,
+  reconciled in the main thread.
+- Memory:
+  - `ORG_CONTEXT.md` — company, market, business model, org structure.
+  - `STAKEHOLDER_MAP.md` — function → owner → documents/systems → external parties (the
+    cross-function impact guide).
+  - `DECISION_LOG.md` — dated decisions + rationale; the source of truth for "Precedent First".
+  - `PROCESS_PLAYBOOK.md` — standard recurring processes (SOPs).
+  - `BRAND_CONTEXT.md` — brand voice, messaging, visual identity, compliance notes.
+  - `FUNCTION_TEMPLATE.md` — copy per function (`FUNC_SALES.md`, `FUNC_HR.md`, …).
 
 ## Problems This Solves
 
 | Problem | Solution |
 |---------|----------|
 | Agent loses context between sessions | `.agent-memory/` persists knowledge |
-| "Login works" but signup is missing | Gate 4: Completeness Check |
-| Web has 10 fields, mobile only has 5 | Gate 3: Reference First |
-| Fixed web but forgot mobile | Gate 2: Cross-platform Checklist |
-| Agent quietly changes docs | Hook: `notify-memory-change.sh` |
-| Task "done" but doesn't actually work | Agent: `task-completion-validator` |
-| Over-engineered simple feature | Agent: `code-quality-pragmatist` |
-| UI styling done from scratch every time | Modern UI Design Skills section in `CLAUDE.md` |
-| Claude busy while Codex sits idle | Codex Delegation Workflow + `CODEX_HANDOFF.md` |
-| Schema column added but missing from API select | Gate 6 + DOMAIN_MAP `⚠️ explicit select` flags + `domain.mjs verify` |
-| Cross-cutting impact (push / email / PDF / i18n) silently misses a surface | DOMAIN_MAP `impact` query + `audit` |
+| Session crashes mid-task | `ACTIVE_WORK.md` session tracking + recovery |
+| Agent quietly changes memory docs | Hook: `notify-memory-change.sh` |
+| Fixed web but forgot mobile / ignored an affected team | Gate 2: Cross-platform / Stakeholder check |
+| Reinvented a feature / contradicted a past decision | Gate 3: Reference / Precedent First |
+| Shipped only the happy path | Gate 4: Completeness Check |
+| Schema column added but missing from an API select | Gate 6 + DOMAIN_MAP `verify` (software) |
+| Off-brand or non-compliant external content | Gate 5: Voice & Compliance Check (business) |
 
-## Customization
+## Adding a New Profile
 
-### Add your own platforms (Gate 2)
+1. Create `profiles/<name>/CLAUDE.<name>.md` — define that domain's gates and session-start files.
+2. Add `profiles/<name>/.agent-memory/` with the domain's memory templates.
+3. Optionally add `profiles/<name>/.cursor/` and other profile-only assets.
+4. `setup.sh <name> <target>` works automatically once `profiles/<name>/` exists.
 
-Edit `CLAUDE.md` → Gate 2 section:
-
-```
-Affected platforms:
-[ ] Server        (server/)
-[ ] Web           (client/)
-[ ] iOS App       (apps/ios/)
-[ ] Android App   (apps/android/)
-[ ] Chrome Extension (extension/)
-```
-
-### Add project-specific cursor rules
-
-Create `.cursor/rules/your-rule.mdc`:
-
-```
----
-description: Your rule description
-alwaysApply: true
----
-
-# Rule content here
-```
-
-### Add your own agents
-
-Create `.claude/agents/your-agent.md` following the existing agent format.
-
-## .gitignore Strategy
-
-**Tracked (shared with team):**
-- `settings.json` — hook configuration
-- `hooks/` — hook scripts
-- `agents/` — custom agent definitions
-- `.agent-memory/` — project context
-
-**Ignored (personal):**
-- `settings.local.json` — individual permissions
-- `projects/`, `worktrees/`, `*.jsonl` — session data
+Keep anything truly domain-agnostic in `core/` so every profile inherits it.
 
 ## License
 

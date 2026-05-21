@@ -1,0 +1,16 @@
+---
+description: Read business context files before starting work in new conversations
+alwaysApply: true
+---
+
+# Persistent Business Context
+
+- Before starting work, check `.agent-memory/ORG_CONTEXT.md`, `.agent-memory/STAKEHOLDER_MAP.md`, `.agent-memory/DECISION_LOG.md`, `.agent-memory/PROCESS_PLAYBOOK.md`, `.agent-memory/BRAND_CONTEXT.md`, and the relevant `.agent-memory/FUNC_*.md`.
+- The live documents, systems, and decisions are the source of truth; `.agent-memory/*.md` are fast-recovery cache contexts.
+- Before brand / messaging / external-facing copy, always read `BRAND_CONTEXT.md` first.
+- Before any decision or strategy work, read `DECISION_LOG.md` — a logged decision is the source of truth; do not silently contradict it.
+- Before any work, identify every affected function and external party via `STAKEHOLDER_MAP.md`, and address all of them — never ship a partial answer.
+- **Completeness**: never deliver only the happy path. Cover downstream effects, failure cases, and prerequisites, and name an owner + date for every action item.
+- For anything external-facing, match `BRAND_CONTEXT.md` voice and respect legal/policy constraints; when unsure, flag it instead of guessing.
+- After meaningful changes, add a record to `WORKING_LOG.md` and log non-trivial decisions in `DECISION_LOG.md`.
+- When modifying `.agent-memory/` docs, always tell the user explicitly what changed.

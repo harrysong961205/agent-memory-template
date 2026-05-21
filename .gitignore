@@ -1,6 +1,6 @@
-# Claude Code — share settings/hooks/agents, exclude personal & session data
-.claude/settings.local.json
-.claude/projects/
-.claude/worktrees/
-.claude/todos/
-.claude/*.jsonl
+# Claude Code — exclude personal & session data anywhere in the repo
+**/.claude/settings.local.json
+**/.claude/projects/
+**/.claude/worktrees/
+**/.claude/todos/
+**/.claude/*.jsonl
