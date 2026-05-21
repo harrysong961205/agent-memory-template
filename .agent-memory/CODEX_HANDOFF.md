@@ -86,6 +86,26 @@ Codex will frequently be asked to read:
 
 Claude names the files Codex needs in each rescue prompt.
 
+## 7.1 Domain Concept Graph (DOMAIN_MAP)
+
+If the project has a `.agent-memory/concepts/` directory, Claude tracks every core concept (Booking, User, ...) as an explicit edge graph there. **Codex must respect these rules**:
+
+- **Do not bulk-Read concept files.** They can be 100+ KB. Use the helper:
+  ```bash
+  node .agents/scripts/domain.mjs impact <Concept>.<field>
+  node .agents/scripts/domain.mjs check-coverage <Concept>
+  ```
+  Or grep: `grep "<Concept>\.<field>" .agent-memory/concepts/*.md`
+- **Apply ⚠️ flagged surfaces.** Every edge with `⚠️ explicit select` / `⚠️ whitelist` is a hand-curated whitelist. When you add columns to the schema, you **must** open the corresponding `select:` / `include:` block and add the new columns there. The file/line is exactly what `check-coverage` prints.
+- **Update the concept file when behavior changes.** If you add fields, endpoints, system messages, side effects, or i18n keys, edit the matching `.agent-memory/concepts/<Concept>.md` `EDGES` block. The vocabulary is fixed (12 verbs); see `.agent-memory/concepts/README.md`.
+- **Run the verifier before reporting done.** Concept files include automated verification:
+  ```bash
+  node .agents/scripts/domain.mjs verify <Concept>
+  node .agents/scripts/domain.mjs audit
+  ```
+  Both must end with **FAIL 0**. `KNOWN_GAP` is acceptable when the `⚠️` note states the gap (`missing`, `gap`, `NOT YET`, `TODO`). Report any KNOWN_GAP back to the main agent so it can be added to the roadmap.
+- **New vocabulary requires approval.** If you genuinely need a verb beyond the 12, surface it in the result report — do not invent it.
+
 ## 8. Output Contract
 
 Every Codex run must report:

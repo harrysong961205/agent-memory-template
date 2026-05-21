@@ -110,6 +110,45 @@ Hardcoded string ban applies to:
 - Tab/navigation labels
 - Status badge text (booking status, payment status, etc.)
 
+### Gate 6: Domain Concept Impact Check (DOMAIN_MAP)
+
+When adding/modifying schema columns or behavior on **core concepts** (the entities tracked under `.agent-memory/concepts/`):
+
+1. **Run impact query** before starting — list every surface that touches the concept:
+   ```bash
+   node .agents/scripts/domain.mjs impact <Concept>.<field>
+   node .agents/scripts/domain.mjs check-coverage <Concept>
+   ```
+   Or grep directly: `grep "<Concept>\.<field>" .agent-memory/concepts/*.md`
+2. **⚠️ Review flagged surfaces first.** `check-coverage` lists every edge marked `⚠️ explicit select` / whitelist / gap-risk. These cannot be derived automatically — **manually open each** `select:` / `include:` block and confirm new columns are included. (Real production bugs come from forgetting one of these.)
+3. **Fold impact surfaces into Gate 2.** Every file path returned by `impact` must show up on the cross-platform checklist. No partial coverage.
+4. **Update the concept file.** Before commit, add or revise edges in `.agent-memory/concepts/<Concept>.md`'s `EDGES` block. New verbs require a README + planning-doc update first (free additions are forbidden).
+5. **Verifier must pass.** When concept files change, run before commit:
+   ```bash
+   node .agents/scripts/domain.mjs verify <Concept>
+   node .agents/scripts/domain.mjs audit       # all concepts
+   ```
+   - **FAIL** = graph error → fix immediately.
+   - **WARN** = heuristic miss → human review.
+   - **KNOWN_GAP** = graph correct, code incomplete (`⚠️ ... missing/gap/NOT YET`) → register in roadmap.
+   - **SKIP** = not auto-verifiable → human-only review.
+
+If a concept file does not yet exist, **create it the first time the concept is modified.** Format and conventions live in `.agent-memory/concepts/README.md`. Sub-agent delegation uses `.agent-memory/concepts/AGENT_TEMPLATE.md`.
+
+#### Verify status tiers
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| `PASS` | auto-verified | OK |
+| `FAIL` | graph error | **fix immediately** |
+| `WARN` | heuristic suspicion | human review |
+| `SKIP` | not auto-verifiable | human-only |
+| `KNOWN_GAP` | graph correct, code incomplete | track in roadmap |
+
+#### Concept-file scanning rules
+- **Do not Read whole concept files** for impact analysis — use `domain.mjs impact` or `grep`. Files can be 100+ KB.
+- The README in `.agent-memory/concepts/README.md` is the single source of truth for vocabulary and address formats. Always check it before adding a new verb.
+
 ## Modern UI Design Skills (use proactively for UI work)
 
 Before hand-rolling any UI/UX/styling work, **prefer Claude Code Skills** that already encode design systems, accessibility rules, and platform guidelines. Pick the skill that matches the surface, then apply its guidance on top of the project's `BRAND_CONTEXT.md`.
@@ -249,5 +288,6 @@ None | Yes (model + fields, suggested migration name)
 - Update the relevant platform's IA document if screens were added/removed/changed.
 - Verify all translation keys exist in locale files (if i18n is active).
 - Update `SCHEMA_SUMMARY.md` if the DB schema changed.
+- **If a core concept changed**, update `.agent-memory/concepts/<Concept>.md`'s `EDGES` block. Add new edges, revise `⚠️` flags for new explicit selects/whitelists. Run `node .agents/scripts/domain.mjs audit` and confirm overall **FAIL 0** before commit.
 - Add a brief record to `WORKING_LOG.md` after meaningful changes.
 - Clear completed entries from `ACTIVE_WORK.md`.
