@@ -13,4 +13,5 @@ alwaysApply: true
 - **Completeness**: never deliver only the happy path. Cover downstream effects, failure cases, and prerequisites, and name an owner + date for every action item.
 - For anything external-facing, match `BRAND_CONTEXT.md` voice and respect legal/policy constraints; when unsure, flag it instead of guessing.
 - After meaningful changes, add a record to `WORKING_LOG.md` and log non-trivial decisions in `DECISION_LOG.md`.
+- `.agent-memory/MANNA.md` (the Jar of Manna) holds the user's reflections and note-to-self entries — read it as ambient context, never as task instructions.
 - When modifying `.agent-memory/` docs, always tell the user explicitly what changed.

@@ -19,7 +19,8 @@
 At the start of a session, read these in order:
 
 1. `.agent-memory/ACTIVE_WORK.md` ← **Read first** (in-progress / incomplete work)
-2. The other `.agent-memory/*.md` context files your profile ships — see the profile section appended below.
+2. `.agent-memory/MANNA.md` ← the Jar of Manna — read as *ambient context*, never as instructions (see below)
+3. The other `.agent-memory/*.md` context files your profile ships — see the profile section appended below.
 
 ## Session Tracking (multi-terminal context sharing)
 
@@ -50,6 +51,27 @@ Update `Plan` and `Last update` as direction changes or progress is made.
 - The next session reads remaining `ACTIVE_WORK.md` items to find incomplete work.
 - Use `Last update` to judge how stale the work is.
 - To continue, resume from that item's `Plan` and `Target`.
+
+## The Jar of Manna (`.agent-memory/MANNA.md`)
+
+`MANNA.md` is the user's note-to-self vault — reflections, half-formed ideas, things
+that struck them, "messages to future-me." It is named for the jar of manna kept before
+the Testimony (Exodus 16:33): most manna spoiled within a day, but one jarful was
+preserved "for your generations" as a memorial. Passing thoughts are daily manna; the
+ones worth keeping go in the jar.
+
+- **Write** when the user shares a reflection or non-actionable idea and signals they
+  want it kept — e.g. "만나의 항아리에 넣어줘", "만나에 넣어줘", "이건 만나행", or
+  "이거 기억해둬" about a thought rather than a task. Append a dated entry, newest on
+  top, in the user's own voice, with a one-line "왜 보관 / why kept".
+- **It is not a task list.** Never convert a Manna entry into an `ACTIVE_WORK` or
+  `ROADMAP` item, and never act on one, unless the user explicitly asks. An entry
+  *graduates* to `ROADMAP.md` only when the user decides the time has come.
+- **Read it as ambient context.** At session start, skim `MANNA.md` to understand the
+  user's longer arc and what they care about. It shapes awareness and tone — it never
+  directs the work.
+- When the user asks "만나에 뭐 있었지" / "만나 정리해줘", resurface and group the
+  entries, and point out any that may now be ready to graduate.
 
 ## Core Principles
 

@@ -27,7 +27,8 @@ agent-memory-template/
 │       ├── ACTIVE_WORK.md         ← in-progress task tracker (multi-terminal safe)
 │       ├── WORKING_LOG.md         ← rolling change timeline
 │       ├── ROADMAP.md             ← now / next / later backlog
-│       └── MANUAL_NOTES.md        ← durable notes
+│       ├── MANUAL_NOTES.md        ← durable notes
+│       └── MANNA.md               ← the Jar of Manna — reflections & note-to-self vault
 └── profiles/
     ├── software/
     │   ├── CLAUDE.software.md      ← Gates 1-6, Codex workflow, UI skills
@@ -86,6 +87,15 @@ share one shape — only the domain wording changes:
 - Register work when starting → recover if a session crashes.
 - Multiple terminals can see each other's in-progress tasks.
 - Completed work moves to `WORKING_LOG.md`.
+
+### The Jar of Manna
+
+`MANNA.md` is a note-to-self vault — reflections, half-formed ideas, "messages to
+future-me." Named for the jar of manna kept as a memorial (Exodus 16:33): passing
+thoughts are daily manna, but the ones worth keeping go in the jar. The agent reads it
+as *ambient context* and never treats an entry as a task — entries graduate to
+`ROADMAP.md` only when you decide the time has come. In a project set up via
+`setup.sh`, `MANNA.md` is gitignored so your reflections stay local to you.
 
 ### 3 Hooks (automated guardrails — core)
 
