@@ -46,6 +46,22 @@ Affected platforms:
 - If it exists, read that code first and match the same fields, flows, validations, and API calls.
 - Existing implementation is the source of truth. New platform only changes the UI for that environment. Never arbitrarily simplify or omit fields.
 
+### Gate 3.5: Tenant Divergence & Code Placement (멀티테넌트 프로젝트에만 적용)
+
+프로젝트가 멀티테넌트(고객사/조직별 격리)라면, 테넌트별로 화면이 갈라지는 건 **페이지 파일 분리**로
+처리한다(동적 위젯 레지스트리/JSON 조립/런타임 슬러그 분기 같은 추상화로 풀지 말 것). 프로젝트별 구체
+컨벤션·경로는 그 repo 문서를 따른다(예: `src/tenants/README.md`). 코드 쓰기 전 확인하고 사용자에게 보여라:
+
+- **라우트는 얇게.** route/page 엔트리는 인증 + feature 게이트 + 테넌트→변형 위임만. 화면 본문은 테넌트별
+  페이지 파일(백본 `_default` + 필요 시 `<tenant>` 오버라이드)에 둔다.
+- **공통 로직 누수 금지 (★핵심).** 데이터 조회·계산·재사용 UI 는 **반드시 공유 레이어(`lib/**`·`components/**`)**
+  에 둔다. 테넌트 페이지 파일에는 **"조립/레이아웃"만** 남긴다.
+  - 이유: 파일을 분리(중복 허용)하므로, 공통 로직이 페이지 파일에 섞이면 버그/개선을 **갈라진 파일마다
+    반복 적용**해야 하고 곧 어긋난다. 페이지 파일이 두꺼워지면 = 공통 로직이 새고 있다는 신호 → 즉시 공유 레이어로 추출.
+- **런타임 분기 금지.** 공유 페이지 안에서 `if (tenant === '...')` 로 가르지 말 것. 갈라지면 파일을 분리하고
+  디스패처에 등록한다. 한 테넌트 변경이 다른 테넌트를 건드리면 안 된다.
+- **메뉴/기능 on/off 는 테넌트 feature 플래그가 단일 진실** — 페이지 파일에서 임의 게이팅하지 말 것.
+
 ### Gate 4: Completeness Check
 Never build only the happy path. Always verify:
 - **Auth flows**: If login exists, check if signup, social login, password reset, and unauthenticated state handling are also needed.
